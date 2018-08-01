@@ -1,0 +1,1246 @@
+swagger: '2.0'
+info:
+  version: '0.0.1'
+  title: 'transfer_money'
+  description: 'An API depicting the working of EKO platform'
+tags:
+- name: "Customers"
+  description: "Customer objects allow you to perform recurring transactions and add multiple recipients to the same customer. The API allows you to create and verify customers. You can retrieve individual customers information as well."
+- name: "Recipients"
+  description: "A recipient is someone to whom a customer can transfer money. To be able to transfer money, a customer must add a recipient using the recipient's bank-account or wallet details.
+
+Using these APIs, you can create, delete and update recipients for your customers.
+
+Each recipient may have an associated wallet or bank account information (Account Number, IFSC) to be able to receive fund."
+- name: "Transactions"
+  description: "Transaction APIs enable fund transfer from one customer to another.The destination could be a wallet, a credit card, a bank account, merchant account or a supported utility account."
+- name: "Banks"
+  description: "These APIs can be used to get bank-specific information."
+paths: 
+  /customers/{customer_id_type}:{customer_id}:
+    get:
+      tags:
+      - "Customers"
+      summary: "Get Customer Information"
+      description: "Get a customer's basic profile information"
+      consumes: 
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "customer_id_type"
+        in: "path"
+        description: "Your unique API key that will authenticate your request"
+        required: true
+        type: "string"
+        default: "mobile_number"
+      - name: "customer_id"
+        in: "path"
+        description: "Value of customer id"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "initiator_id"
+        in: "query"
+        description: "partner id from where the request has been initiated"
+        required: true
+        type: "integer"
+        format: "int64"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Non-KYC active"
+              response_type_id:
+                type: "integer"
+                format: "int32"
+                example: 33
+              response_status_id:
+                type: "integer"
+                format: "int32"
+                example: 0
+              status:
+                type: "integer"
+                format: "int32"
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  balance:
+                    type: "string"
+                    example: "0.00"
+                  name:
+                    type: "string"
+                    example: "suba"
+                  state:
+                    type: "string"
+                    example: "0"
+                  customer_id_type:
+                    type: "string"
+                    example: "mobile-number"
+                  state_desc:
+                    type: "string"
+                    example: "kyc.pending"
+                  currency:
+                    type: "string"
+                    example: "INR"
+                  mobile:
+                    type: "string"
+                    example: "5669023498"
+       
+            
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+    put:
+      tags:
+      - "Customers"
+      summary: "Create Customer"
+      description: "Onboard a new customer to enable him/her to transact"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "customer_id_type"
+        in: "path"
+        required: true
+        type: "string"
+        default: "mobile_number"
+      - name: "customer_id"
+        in: "path"
+        description: "id of the customer; currently only mobile number of the customer can be used"
+        required: true
+        type: "integer"
+        format: "int64"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      - name: "name"
+        in: "formData"
+        required: true
+        type: "string"
+        description: "name of customer"
+      - name: "initiator_id"
+        in: "formData"
+        required: true
+        type: "integer"
+        description: "partner id from where the request has been initiated"
+      - name: "dob"
+        in: "formData"
+        required: false
+        type: "string"
+        format: "date-time"
+        description: "date of birth of the customer as per id"
+      - name: "gender"
+        type: "integer"
+        in: "formData"
+      - name: "address_line1"
+        type: "string"
+        in: "formData"
+      - name: "nationality"
+        type: "string"
+        in: "formData"
+      - name: "id_proof_type_id"
+        type: "string"
+        in: "formData"
+      - name: "id_proof"
+        type: "string"
+        in: "formData"
+      - name: "file1"
+        type: "file"
+        in: "formData"
+      - name: "file2"
+        type: "file"
+        in: "formData"
+      - name: "income_source"
+        type: "string"
+        in: "formData"
+      - name: "remittance_reason"
+        type: "string"
+        in: "formData"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              response_type_id:
+                type: "string"
+                example: "1"
+              end_note:
+                type: "string"
+                example: "Thanks,Eko"
+              response_status_id:
+                type: "string"
+                example: "0"
+              parameters:
+                type: "object"
+                properties:
+                  recipient_account_number:
+                    type: "string"
+                    example: "11231123456"
+                  recipient_id:
+                    type: "string"
+                    example: "23"
+                  recipient_name:
+                    type: "string"
+                    example: "Foo"
+              unique_reference_id:
+                type: "string"
+                example: "1233"
+              salutation:
+                type: "string"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /customers/verification/otp:{otp}:
+    put:
+      tags:
+      - "Customers"
+      summary: "Verify Customer Identity"
+      description: "Verify a customer's mobile number via OTP"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "otp"
+        in: "path"
+        required: true
+        type: "integer"
+        format: "int64"
+        default: "otp"
+      - name: "customer_id_type"
+        in: "formData"
+        required: true
+        type: "string"
+        default: "mobile_number"
+      - name: "customer_id"
+        in: "formData"
+        description: "id of the customer; currently only mobile number of the customer can be used"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "initiator_id"
+        in: "formData"
+        description: "partner id from where the request has been initiated"
+        required: true
+        type: "string"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Wallet opened successfully"
+              response_type_id:
+                type: "integer"
+                format: "int32"
+                example: 300
+              response_status_id:
+                type: "integer"
+                format: "int32"
+                example: 0
+              status:
+                type: "integer"
+                format: "int32"
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  state:
+                    type: "string"
+                    example: "2"
+                  customer_id_type:
+                    type: "string"
+                    example: "mobile-number"
+                  customer_id:
+                    type: "string"
+                    example: "9962817283"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /customers/{customer_id_type}:{customer_id}/otp:
+    put:
+      tags:
+      - "Customers"
+      summary: "Resend Otp"
+      description: "Resend OTP to a customer for verifying his/her mobile number"
+      consumes: 
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "customer_id_type"
+        in: "path"
+        required: true
+        type: "string"
+        default: "mobile_number"
+      - name: "customer_id"
+        in: "path"
+        description: "id of the customer; currently only mobile number of the customer can be used"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "body"
+        name: "initiator_id"
+        required: true
+        description: "partner id from where the request has been initiated"
+        schema:
+          type: string 
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success! otp processed"
+              response_type_id:
+                type: "integer"
+                format: "int32"
+                example: 321
+              response_status_id:
+                type: "integer"
+                format: "int32"
+                example: 0
+              status:
+                type: "integer"
+                format: "int32"
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  otp:
+                    type: "string"
+                    example: "540"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /customers/{customer_id_type}:{customer_id}/recipients:
+    get:
+      tags:
+      - "Recipients"
+      summary: "Get List of Recipients"
+      description: "Get list of recipients for a customer"
+      consumes: 
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "customer_id_type"
+        in: "path"
+        required: true
+        type: "string"
+        default: "mobile_number"
+      - name: "customer_id"
+        in: "path"
+        description: "id of the customer; currently only mobile number of the customer can be used"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "initiator_id"
+        in: "query"
+        description: "partner id from where the request has been initiated"
+        required: true
+        type: "integer"
+        format: "int64"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success"
+              response_type_id:
+                type: "string"
+                example: "18"
+              response_status_id:
+                type: "string"
+                example: "-1"
+              status:
+                type: "string"
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  recipient_id_type:
+                    type: "string"
+                    example: "acc_ifsc"
+                  recipient_id:
+                    type: "string"
+                    example: "10002343"
+                  ifsc_state:
+                    type: "string"
+                    example: "1"
+                  account:
+                    type: "string"
+                    example: "XXXXXXXXXXX9791"
+                  recipient_mobile:
+                    type: "string"
+                    example: "9988776655"
+                  bank:
+                    type: "string"
+                    example: "AXIS BANK"
+                  reciient_name:
+                    type: "string"
+                    example: "BENE CUSTOMER NAME"
+                  channel:
+                    type: "string"
+                    example: "0"
+                  ifsc:
+                    type: "string"
+                    example: "UTIB0000006"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /customers/{customer_id_type}:{customer_id}/recipients/recipient_id:{id}:
+    get:
+      tags:
+      - "Recipients"
+      summary: "Get Recipient Details"
+      description: "Get the details of a recipient, like name, account number, etc"
+      consumes: 
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+        description: "This is the unique recipient id that is returned when a recipient is added to the customer in Create recipient API"
+      - name: "customer_id_type"
+        in: "path"
+        required: true
+        type: "string"
+        default: "mobile_number"
+      - name: "customer_id"
+        in: "path"
+        description: "id of the customer; currently only mobile number of the customer can be used"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "initiator_id"
+        in: "query"
+        description: "partner id from where the request has been initiated"
+        required: true
+        type: "integer"
+        format: "int64"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success"
+              response_type_id:
+                type: "integer"
+                example: 18
+              response_status_id:
+                type: "integer"
+                example: -1
+              status:
+                type: integer
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  recipient_id_type:
+                    type: "string"
+                    example: "recipient_id"
+                  name:
+                    type: "string"
+                    example: "Nirmal"
+                  recipient_id:
+                    type: "integer"
+                    example: 10002921
+                  account:
+                    type: "string"
+                    example: "61046336411"
+                  ifsc:
+                    type: "string"
+                    example: "SBIN0009062"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /customers/:customer_id_type::customer_id/recipients/:recipients_id_type::id:
+    put:
+      tags:
+      - "Recipients"
+      summary: "Add Recipient"
+      description: "Add a new recipient or update an existing recipient for a customer"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "string"
+        description: "value of the recipient_id"
+      - name: "recipient_id_type"
+        in: "path"
+        required: true
+        type: "string"
+        description: "recipient_id_type can have the following parameters: a) acc_ifsc b) acc_bankcode (only applicable when IMPS service is available and IFSC is not required)"
+      - name: "customer_id_type"
+        in: "path"
+        required: true
+        type: "string"
+        default: "mobile_number"
+      - name: "customer_id"
+        in: "path"
+        description: "id of the customer; currently only mobile number of the customer can be used"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "initiator_id"
+        in: "formData"
+        description: "id of the customer; currently only mobile number of the customer can be used"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "bank_id"
+        in: "formData"
+        required: true
+        type: "integer"
+        description: "a unique id for each bank has been allocated and that has to passed here"
+      - name: "recipient_name"
+        in : "formData"
+        required: true
+        type: "string"
+        description: "name of the recipient"
+      - name: "recipient_mobile"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "recipient_type"
+        in: "formData"
+        required: true
+        type: "integer"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success"
+              response_type_id:
+                type: "integer"
+                example: 43
+              response_status_id:
+                type: "integer"
+                example: 0
+              status:
+                type: integer
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  recipient_id_type:
+                    type: "string"
+                    example: "acc_ifsc"
+                  recipient_id:
+                    type: "integer"
+                    example: 10002332
+                  recipient_mobile:
+                    type: "string"
+                    example: "8987896897"
+                  customer_id:
+                    type: "string"
+                    example: "9962817283"
+                  is_self_account:
+                    type: "string"
+                    example: "0"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /transactions:
+    post:
+      tags:
+      - "Transactions"
+      summary: "Initiate Transaction"
+      description: "Initiate a Money Transfer transaction to a bank account via NEFT/IMPS"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "recipient_id"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "amount"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "time_stamp"
+        in: "formData"
+        required: true
+        type: "string"
+        format: "date-time"
+      - name: "currency"
+        in: "formData"
+        required: true
+        type: "string"
+        default: "INR"
+      - name: "customer_id"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "initiator_id"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "client_ref_id"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "hold_timeout"
+        in: "formData"
+        required: false
+        type: "integer"
+      - name: "state"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "channel"
+        in: "formData"
+        required: true
+        type: "integer"
+      - name: "merchant_document_id_type"
+        in: "formData"
+        required: false
+        type: "integer"
+        enum: ["1-PAN","2-Aadhar Number"]
+      - name: "merchant_document_id"
+        in: "formData"
+        required: false
+        type: "string"
+        description: "value of the merchant document id"
+      - name: "latlong"
+        in: "formData"
+        required: false
+        type: "string"
+      - name: "pincode"
+        in: "formData"
+        required: false
+        type: "integer"
+      - name: "user_pan"
+        in: "formData"
+        required: false
+        type: "string"
+        description: "captures pan number of the user incase of cash collection services being used"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success! commit"
+              response_type_id:
+                type: "integer"
+                example: 325
+              response_status_id:
+                type: "integer"
+                example: 0
+              status:
+                type: integer
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  timestamp:
+                    type: "string"
+                    format: "date-time"
+                    example: "2015-09-16T14:17:19.813Z"
+                  tx_status:
+                    type: "string"
+                    example: "0"
+                  txstatus_desc:
+                    type: "string"
+                    example: "Success"
+                  debit_user_id:
+                    type: "string"
+                    example: "9910028267"
+                  balance:
+                    type: "string"
+                    example: "4676016.61"
+                  fee:
+                    type: "string"
+                    example: "3.56"
+                  amount:
+                    type: "string"
+                    example: "500"
+                  state: 
+                    type: "string"
+                    example: "1"
+                  recipient_id:
+                    type: "string"
+                    example: "11002344343"
+                  service_tax:
+                    type: "string"
+                    example: "0.44"
+                  transaction_id:
+                    type: "string"
+                    example: "12181414"
+                  customer_id:
+                    type: "string"
+                    example: "9901473431"
+                  channel:
+                    type: "string"
+                    example: "2"
+                  currency:
+                    type: "string"
+                    example: "INR"
+                  client_ref_id:
+                    type: "integer"
+                    example: "12345678901234567890"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /transactions/:id:
+    get:
+      tags:
+      - "Transactions"
+      summary: "Get Transaction Status"
+      description: "Get the status of a Money Transfer transaction basis Eko TID or client-reference-ID"
+      consumes: 
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "tid"
+        in: "query"
+        required: false
+        type: "string"
+        description: "This can be Eko tid or partner's unique id"
+      - name: "client_ref_id"
+        in: "query"
+        required: false
+        type: "string"
+      - name: "initiator_id"
+        in: "query"
+        required: true
+        type: "integer"
+        format: "int64"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success! trxn.status.enq.successful"
+              response_type_id:
+                type: "integer"
+                example: 70
+              response_status_id:
+                type: "integer"
+                example: 0
+              status:
+                type: integer
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  timestamp:
+                    type: "string"
+                    example: "2015-11-06T10:20:25.066Z"
+                  fee:
+                    type: "string"
+                    example: "1.78"
+                  amount:
+                    type: "string"
+                    example: "200.0"
+                  txstatus_desc:
+                    type: "string"
+                    example: "Refund Pending"
+                  tx_status:
+                    type: "string"
+                    example: "3"
+                  recipient_id:
+                    type: "string"
+                    example: "10002826"
+                  service_tax:
+                    type: "string"
+                    example: "0.22"
+                  tid:
+                    type: "string"
+                    example: "12212118"
+                  channel:
+                    type: "string"
+                    example: "2"
+                  customer_id:
+                    type: "string"
+                    example: "9910028267"
+                  currency:
+                    type: "string"
+                    example: "INR"  
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /transactions/:id/refund:
+    post:
+      tags:
+      - "Transactions"
+      summary: "Refund"
+      description: "Initiate refund to the customer for a failed cash to digital transaction"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "tid"
+        in: "path"
+        required: true
+        type: "string"
+        description: "This can be Eko tid or partner's unique reference id"
+      - name: "client_ref_id"
+        in: "path"
+        required: true
+        type: "string"
+        description: "unique id of transaction on client platform"
+      - name: "initiator_id"
+        in: "formData"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "otp"
+        in: "formData"
+        required: true
+        description: "OTP shared with customer on the registered mobile number"
+        type: "integer"
+      - name: "state"
+        in: "formData"
+        required: true
+        description: "current status of the transaction; 1 denotes 'commit'"
+        default: 1
+        type: "integer"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Transaction successful"
+              response_type_id:
+                type: "integer"
+                example: 352
+              response_status_id:
+                type: "integer"
+                example: 0
+              status:
+                type: integer
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  refunded_amount:
+                    type: "string"
+                    example: "403.0"
+                  timestamp:
+                    type: "string"
+                    example: "2015-10-12T12:05:44.193Z"
+                  fee:
+                    type: "string"
+                    example: "2.67"
+                  amount:
+                    type: "string"
+                    example: "400.0"
+                  state:
+                    type: "string"
+                    example: "5"
+                  service_tax:
+                    type: "string"
+                    example: "0.33"
+                  tid:
+                    type: "string"
+                    example: "12208993"
+                  client_ref_id:
+                    type: "integer"
+                    example: 9076868
+                  refund_tid:
+                    type: "string"
+                    example: "12209000"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /transactions/:id/refund/otp:
+    post:
+      tags:
+      - "Transactions"
+      summary: "Resend Refund OTP"
+      description: "Resend the OTP to the customer to initiate the refund process"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+        description: "tid of the transaction for which refund needs to be initiated"
+      - name: "initiator_id"
+        in: "formData"
+        required: true
+        type: "integer"
+        format: "int64"
+        description: "partner id from where the request has been initiated"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success! trxn.status.enq.successful"
+              response_type_id:
+                type: "integer"
+                example: 70
+              response_status_id:
+                type: "integer"
+                example: 0
+              status:
+                type: integer
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  tid:
+                    type: "string"
+                    example: "12212118"
+                  otp:
+                    type: "string"
+                    example: "4878925010"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /banks:
+    get:
+      tags:
+      - "Banks"
+      summary: "Get Bank Details"
+      description: "Get the details of a bank like name, bank code, available channels, is IFSC required, is verification available, etc."
+      consumes: 
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "bank_code"
+        in: "query"
+        required: true
+        type: "string"
+      - name: "ifsc"
+        in: "query"
+        required: false
+        type: "string"
+      - name: "initiator_id"
+        in: "query"
+        required: true
+        type: "integer"
+        format: "int64"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success! Bank Found for given Bank Code"
+              response_type_id:
+                type: "integer"
+                example: 466
+              response_status_id:
+                type: "integer"
+                example: 0
+              status:
+                type: integer
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  isVerificationAvailable:
+                    type: "string"
+                    example: "0"
+                  name:
+                    type: "string"
+                    example: "HDFC BANK LTD"
+                  ifsc_status:
+                    type: "integer"
+                    example: 1
+                  available_channels:
+                    type: "integer"
+                    example: 0
+                  code: 
+                    type: "string"
+                    example: "HDFC"
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /pan/verify:
+    post:
+      tags:
+      - "Banks"
+      summary: "PAN verification"
+      consumes: 
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "pan_number"
+        in: "path"
+        required: true
+        type: "string"
+        description: "This is the pan number that needs to be verified"
+      - name: "purpose"
+        in: "path"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "purpose_desc"
+        in: "path"
+        required: true
+        type: "string"
+      - name: "customer_mobile"
+        in: "path"
+        required: true
+        type: "integer"
+      - name: "initiator_id"
+        in: "path"
+        required: true
+        type: "integer"
+        format: "int64"
+        description: "partner id from where the request has been initiated"
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              response_status_id:
+                type: "integer"
+                example: -1
+              data:
+                type: "object"
+                properties:
+                  pan_number:
+                    type: "string"
+                    example: "...XXX"
+                  last_name:
+                    type: "string"
+                    example: "Foo"
+                  middle_name:
+                    type: "string"
+                    example: ""
+                  title: 
+                    type: "string"
+                    example: "Shri"
+                  first_name:
+                    type: "string"
+                    example: "Bar"
+              response_type_id:
+                type: "integer"
+                example: 1255
+              message:
+                type: "string"
+                example: "PAN verification successful" 
+              status:
+                type: integer
+                example: 0
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+  /banks/id_type::id/accounts/:id:
+    post:
+      tags:
+      - "Banks"
+      summary: "Verify Bank Account Details"
+      description: "Enables customers to verify bank account number by returning the name of the account holder"
+      consumes:
+      - "application/x-www-form-urlencoded"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id_type"
+        in: "path"
+        required: true
+        type: "string"
+        default: "bank_code"
+        enum: ["ifsc" ,"bank_code"]
+      - name: "id"
+        in: "path"
+        required: true
+        type: "integer"
+        format: "int64"
+        description: "need to mention account number which needs to be verified"
+      - name: "initiator_id"
+        in: "formData"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "customer_id"
+        in: "formData"
+        required: true
+        type: "integer"  
+      - $ref: '#/parameters/developerkey'
+      - $ref: '#/parameters/secret-key'
+      - $ref: '#/parameters/secret-key-timestamp'
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Success! Account details found"
+              response_type_id:
+                type: "integer"
+                example: 61
+              response_status_id:
+                type: "integer"
+                example: -1
+              status:
+                type: integer
+                example: 0
+              data:
+                type: "object"
+                properties:
+                  account:
+                    type: "string"
+                    example: "61046336411"
+                  bank:
+                    type: "string"
+                    example: "STATE BANK OF INDIA"
+                  receipient_name:
+                    type: "string"
+                    example: "Nirmal Maheswari"
+                  is_name_editable:
+                    type: "string"
+                    example: "0"
+                  tid: 
+                    type: "string"
+                    example: "12516566"
+                  amount: 
+                    type: "integer"
+                    example: 1.00
+                  fee: 
+                    type: "integer"
+                    example: 3.00
+                  is_ifsc_required:
+                    type: "string"
+                    example: "0"
+                  ifsc: 
+                    type: "string"
+                    example: "SBIN0000001"
+                  aadhar:
+                    type: "string"
+                    example: ""
+        400:
+          description: "Bad Request"
+      security:
+      - developer_key: []
+securityDefinitions:
+  developer_key:
+    type: apiKey
+    name: "developer_key"
+    in: header
+parameters:
+  developerkey:
+    name: "developer_key"
+    in: "header"
+    required: true
+    type: "string"
+    description: "Your unique API key that will authenticate your request"
+  secret-key:
+    name: "secret-key"
+    in: "header"
+    required: false
+    type: "string"
+    description: "refer to authentication section"  
+  secret-key-timestamp:  
+    name: "secret-key-timestamp"
+    in: "header"
+    required: false
+    type: "string"
+    description: "refer to authentication section"
+    
+host: staging.eko.in:25004
+basePath: /ekoapi/v1
+schemes:
+ - https
